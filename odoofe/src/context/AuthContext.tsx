@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
+const API_BASE = import.meta.env.VITE_API_BASE;
 interface SearchHistoryItem {
   _id: string;
   product_image: string;
@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/authCheck', {
+      const response = await fetch('${API_BASE}/api/v1/auth/authCheck', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+      const response = await fetch('${API_BASE}/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/signup', {
+      const response = await fetch('${API_BASE}/api/v1/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('token');
 
       if (token) {
-        await fetch('http://localhost:8000/api/v1/auth/logout', {
+        await fetch("${API_BASE}/api/v1/auth/logout", {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
