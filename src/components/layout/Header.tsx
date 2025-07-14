@@ -1,3 +1,14 @@
-I notice that the original file content appears to be empty, but the diff is trying to add content that seems to be part of a larger React component. Since there's no original content to work with, I cannot generate the complete file content that would result from applying this diff.
-
-The diff appears to be adding an admin panel link with conditional rendering based on user role, but without the surrounding context from the original file, I cannot provide the complete file content.
+<div className="hidden md:flex items-center space-x-4">
+             {isAuthenticated ? (
+               <>
+                {user?.role === 'admin' && (
+                  <Link to="/admin">
+                    <Button variant="outline" size="sm">
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
+                <span className="text-sm text-gray-600">{user?.points} points</span>
+               </>
+             )}
+           </div>
