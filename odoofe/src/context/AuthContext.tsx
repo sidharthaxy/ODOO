@@ -30,6 +30,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   getToken: () => string | null;
+  getAuthHeaders: () => Record<string, string>;
 }
 
 interface AuthProviderProps {
@@ -55,7 +56,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const getToken = () => localStorage.getItem("rewear_token");
+  const getToken = useCallback(() => localStorage.getItem("rewear_token"), []);
+
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const token = getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, [getToken]);
 
   const fetchMe = useCallback(async () => {
     try {
@@ -171,6 +177,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         logout,
         refreshUser,
         getToken,
+        getAuthHeaders,
       }}
     >
       {children}

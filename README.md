@@ -457,4 +457,3 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`).
 5. Open a Pull Request.
 
-Distributed under the **ISC License**. See `LICENSE` for details.
