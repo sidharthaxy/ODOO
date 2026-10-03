@@ -1,9 +1,30 @@
 //id,product_image,title,description,points
 import mongoose from "mongoose";
-
 const productSchema = new mongoose.Schema({
-  product_image: {
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  available: {
+    type: Boolean,
+    default: true,
+  },
+  status: {
     type: String,
+    enum: ['PENDING', 'APPROVED', 'REJECTED'],
+    default: 'PENDING',
+  },
+  flagged: {
+    type: Boolean,
+    default: false,
+  },
+  flagReason: {
+    type: String,
+    default: '',
+  },
+  images: {
+    type: [String],
     required: true,
   },
   title: {
@@ -15,13 +36,24 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  category: {
+    type: String,
+    required: true,
+  },
+  condition: {
+    type: String,
+    required: true,
+  },
+  tags: {
+    type: [String],
+    default: [],
+  },
   points: {
     type: Number,
     required: true,
   },
   type:  {
     type: String,
-    required: true,
   },
   size:  {
     type: String,

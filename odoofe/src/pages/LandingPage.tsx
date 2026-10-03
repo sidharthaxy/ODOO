@@ -1,36 +1,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Recycle, Users, Heart, Star, Shirt, TrendingUp } from 'lucide-react';
+import { ArrowRight, Recycle, Users, Heart } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 
+interface FeaturedItem {
+  _id: string;
+  title: string;
+  description: string;
+  images: string[];
+  points: number;
+  size: string;
+  condition: string;
+}
+
 export const LandingPage: React.FC = () => {
-  const featuredItems = [
-    {
-      id: 1,
-      title: 'Vintage Denim Jacket',
-      image: 'https://images.pexels.com/photos/1124465/pexels-photo-1124465.jpeg?w=300&h=300&fit=crop',
-      condition: 'Excellent',
-      size: 'M',
-      points: 75
-    },
-    {
-      id: 2,
-      title: 'Designer Silk Blouse',
-      image: 'https://images.pexels.com/photos/1018911/pexels-photo-1018911.jpeg?w=300&h=300&fit=crop',
-      condition: 'Like New',
-      size: 'S',
-      points: 120
-    },
-    {
-      id: 3,
-      title: 'Classic Wool Coat',
-      image: 'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?w=300&h=300&fit=crop',
-      condition: 'Good',
-      size: 'L',
-      points: 95
-    }
-  ];
+  const [featuredItems, setFeaturedItems] = React.useState<FeaturedItem[]>([]);
+
+  React.useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/v1/search/all`);
+        if (res.ok) {
+          const data = await res.json();
+          // Just take the first 3 for "featured"
+          setFeaturedItems(data.items.slice(0, 3));
+        }
+      } catch (err) {
+        console.error('Failed to fetch items', err);
+      }
+    };
+    fetchItems();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -164,10 +165,10 @@ export const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredItems.map((item) => (
-              <Card key={item.id} hover>
+              <Card key={item._id} hover>
                 <div className="aspect-square overflow-hidden rounded-t-lg">
                   <img
-                    src={item.image}
+                    src={item.images?.[0] || 'https://via.placeholder.com/300'}
                     alt={item.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -182,7 +183,7 @@ export const LandingPage: React.FC = () => {
                     <span className="font-semibold text-purple-600" style={{ color: 'rgb(107, 77, 101)' }}>
                       {item.points} points
                     </span>
-                    <Link to={`/item/${item.id}`}>
+                    <Link to={`/item/${item._id}`}>
                       <Button size="sm">View Details</Button>
                     </Link>
                   </div>

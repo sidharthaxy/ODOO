@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Plus, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
@@ -12,10 +13,12 @@ interface FormData {
   type: string;
   size: string;
   condition: string;
+  points: number;
   tags: string[];
 }
 
 export const AddItemPage: React.FC = () => {
+  const { getToken } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -23,9 +26,11 @@ export const AddItemPage: React.FC = () => {
     type: '',
     size: '',
     condition: '',
+    points: 50,
     tags: []
   });
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -70,18 +75,20 @@ export const AddItemPage: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // In a real app, you would upload to a server and get URLs back
-      // For demo purposes, we'll create object URLs
-      const newImages: string[] = [];
+      const newFiles: File[] = [];
+      const newPreviews: string[] = [];
       for (let i = 0; i < Math.min(files.length, 5 - images.length); i++) {
-        newImages.push(URL.createObjectURL(files[i]));
+        newFiles.push(files[i]);
+        newPreviews.push(URL.createObjectURL(files[i]));
       }
-      setImages(prev => [...prev, ...newImages]);
+      setImages(prev => [...prev, ...newFiles]);
+      setPreviewImages(prev => [...prev, ...newPreviews]);
     }
   };
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const addTag = () => {
@@ -117,20 +124,44 @@ export const AddItemPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real app, submit to your backend
-      console.log('Submitting item:', { ...formData, images });
+      const submitData = new window.FormData();
+      submitData.append('title', formData.title);
+      submitData.append('description', formData.description);
+      submitData.append('category', formData.category);
+      submitData.append('type', formData.type);
+      submitData.append('size', formData.size);
+      submitData.append('condition', formData.condition);
+      submitData.append('tags', JSON.stringify(formData.tags));
+      submitData.append('points', String(formData.points || 50));
+
+      images.forEach((img) => {
+        submitData.append('images', img);
+      });
+
+      const token = getToken();
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/v1/search/add`, {
+        method: 'POST',
+        body: submitData,
+        credentials: 'include',
+        headers,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Submission failed');
+      }
       
       navigate('/dashboard');
     } catch (error) {
       console.error('Error submitting item:', error);
+      const msg = error instanceof Error ? error.message : 'Failed to upload item.';
+      setErrors(prev => ({ ...prev, images: msg }));
     } finally {
       setLoading(false);
     }
@@ -161,7 +192,7 @@ export const AddItemPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {images.map((image, index) => (
+                {previewImages.map((image, index) => (
                   <div key={index} className="relative aspect-square">
                     <img
                       src={image}
@@ -183,7 +214,7 @@ export const AddItemPage: React.FC = () => {
                   </div>
                 ))}
                 
-                {images.length < 5 && (
+                {previewImages.length < 5 && (
                   <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 transition-colors">
                     <Upload className="h-8 w-8 text-gray-400 mb-2" />
                     <span className="text-sm text-gray-600 text-center">Add Photo</span>
@@ -315,13 +346,26 @@ export const AddItemPage: React.FC = () => {
                 </div>
               </div>
 
-              <Input
-                label="Type (Optional)"
-                value={formData.type}
-                onChange={handleInputChange('type')}
-                placeholder="e.g., Blazer, Sneakers, Handbag"
-                helperText="Be specific about the type of item"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Type (Optional)"
+                  value={formData.type}
+                  onChange={handleInputChange('type')}
+                  placeholder="e.g., Blazer, Sneakers, Handbag"
+                  helperText="Be specific about the type of item"
+                />
+
+                <Input
+                  label="Points Value *"
+                  type="number"
+                  min="5"
+                  max="1000"
+                  value={String(formData.points)}
+                  onChange={(e) => setFormData(prev => ({ ...prev, points: Math.max(1, parseInt(e.target.value) || 0) }))}
+                  placeholder="50"
+                  helperText="Redemption points required for this item"
+                />
+              </div>
             </CardContent>
           </Card>
 

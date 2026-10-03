@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ItemDetailPage } from './pages/ItemDetailPage';
 import { AddItemPage } from './pages/AddItemPage';
 import { AdminPanelPage } from './pages/AdminPanelPage';
+import { BrowsePage } from './pages/BrowsePage';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/browse" element={<BrowsePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />

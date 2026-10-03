@@ -60,7 +60,11 @@ export const SignupPage: React.FC = () => {
       await signup(formData.name, formData.email, formData.password);
       navigate('/dashboard');
     } catch (error) {
-      setErrors({ general: 'Failed to create account. Please try again.' });
+      if (error instanceof Error) {
+        setErrors({ general: error.message });
+      } else {
+        setErrors({ general: 'Failed to create account. Please try again.' });
+      }
     } finally {
       setLoading(false);
     }

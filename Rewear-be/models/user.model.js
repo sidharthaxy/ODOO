@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 // Define schema for each search history item
 const searchItemSchema = new mongoose.Schema({
-	product_image: { type: String, required: true },
+	images: { type: [String], required: true },
 	title: { type: String, required: true },
 	description: { type: String, required: true },
 	points: { type: Number, required: true }
@@ -28,6 +28,17 @@ const userSchema = mongoose.Schema({
 		type: String,
 		default: "",
 	},
+	role: {
+		type: String,
+		enum: ["USER", "ADMIN"],
+		default: "USER",
+	},
+
+	points: {
+		type: Number,
+		default: 100,
+	},
+
 	searchHistory: {
 		type: [searchItemSchema],
 		default: [],

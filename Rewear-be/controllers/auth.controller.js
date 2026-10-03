@@ -20,13 +20,16 @@ export async function signup(req, res) {
 			return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
 		}
 
-		const existingUserByEmail = await User.findOne({ email: email });
+		const normalizedEmail = email.toLowerCase().trim();
+		const normalizedUsername = username.trim();
+
+		const existingUserByEmail = await User.findOne({ email: normalizedEmail });
 
 		if (existingUserByEmail) {
 			return res.status(400).json({ success: false, message: "Email already exists" });
 		}
 
-		const existingUserByUsername = await User.findOne({ username: username });
+		const existingUserByUsername = await User.findOne({ username: normalizedUsername });
 
 		if (existingUserByUsername) {
 			return res.status(400).json({ success: false, message: "Username already exists" });
@@ -35,22 +38,23 @@ export async function signup(req, res) {
 		const salt = await bcryptjs.genSalt(10);
 		const hashedPassword = await bcryptjs.hash(password, salt);
 
-		const PROFILE_PICS = [ "/avatar2.png"];
-
+		const PROFILE_PICS = ["/avatar2.png"];
 		const image = PROFILE_PICS[0];
 
 		const newUser = new User({
-			email,
+			email: normalizedEmail,
 			password: hashedPassword,
-			username,
+			username: normalizedUsername,
 			image,
+			points: 100, // 100 welcome bonus points to get started
 		});
 
-		generateTokenAndSetCookie(newUser._id, res);
+		const token = generateTokenAndSetCookie(newUser._id, res);
 		await newUser.save();
 
 		res.status(201).json({
 			success: true,
+			token,
 			user: {
 				...newUser._doc,
 				password: "",
@@ -70,9 +74,10 @@ export async function login(req, res) {
 			return res.status(400).json({ success: false, message: "All fields are required" });
 		}
 
-		const user = await User.findOne({ email: email });
+		const normalizedEmail = email.toLowerCase().trim();
+		const user = await User.findOne({ email: normalizedEmail });
 		if (!user) {
-			return res.status(404).json({ success: false, message: "Invalid credentials" });
+			return res.status(400).json({ success: false, message: "Invalid credentials" });
 		}
 
 		const isPasswordCorrect = await bcryptjs.compare(password, user.password);
@@ -81,10 +86,11 @@ export async function login(req, res) {
 			return res.status(400).json({ success: false, message: "Invalid credentials" });
 		}
 
-		generateTokenAndSetCookie(user._id, res);
+		const token = generateTokenAndSetCookie(user._id, res);
 
 		res.status(200).json({
 			success: true,
+			token,
 			user: {
 				...user._doc,
 				password: "",
@@ -98,7 +104,12 @@ export async function login(req, res) {
 
 export async function logout(req, res) {
 	try {
-		res.clearCookie("rewear-jwt");
+		const isProduction = process.env.NODE_ENV === "production";
+		res.clearCookie("rewear-jwt", {
+			httpOnly: true,
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
+		});
 		res.status(200).json({ success: true, message: "Logged out successfully" });
 	} catch (error) {
 		console.log("Error in logout controller", error.message);
@@ -106,13 +117,16 @@ export async function logout(req, res) {
 	}
 }
 
-export async function authCheck(req, res) {	
-	try {
-		console.log("req.user:", req.user);
-		res.status(200).json({ success: true, user: req.user });
-	} catch (error) {
-		console.log("Error in authCheck controller", error.message);
-		res.status(500).json({ success: false, message: "Internal server error" });
-		//throw error;
-	}
+export async function authCheck(req, res) {
+  res.status(200).json({
+    success: true,
+    user: {
+      _id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+      role: req.user.role,
+      points: req.user.points,
+      image: req.user.image,
+    },
+  });
 }

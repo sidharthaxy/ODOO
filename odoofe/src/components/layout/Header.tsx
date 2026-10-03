@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shirt, Menu, X, User, LogOut, Plus } from 'lucide-react';
+import { Shirt, Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 
@@ -35,6 +35,11 @@ export const Header: React.FC = () => {
             {isAuthenticated && (
               <Link to="/add-item" className="text-gray-700 hover:text-purple-600 transition-colors">
                 List Item
+              </Link>
+            )}
+            {isAuthenticated && user?.role === 'ADMIN' && (
+              <Link to="/admin" className="text-gray-700 hover:text-purple-600 font-semibold transition-colors">
+                Admin Panel
               </Link>
             )}
           </nav>
@@ -105,6 +110,15 @@ export const Header: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   List Item
+                </Link>
+              )}
+              {isAuthenticated && user?.role === 'ADMIN' && (
+                <Link
+                  to="/admin"
+                  className="text-gray-700 hover:text-purple-600 font-semibold transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin Panel
                 </Link>
               )}
               
